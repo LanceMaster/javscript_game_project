@@ -6,18 +6,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>VS_김준희</title>
     <style>
+        /* 기본 페이지 스타일 설정 */
         body {
             margin: 0;
-            overflow: hidden;
+            overflow: hidden; /* 스크롤 숨기기 */
             font-family: 'Arial', sans-serif;
-            background: linear-gradient(45deg, #0a0a2e, #16213e);
+            background: linear-gradient(45deg, #0a0a2e, #16213e); /* 배경 그라데이션 */
         }
 
+        /* 게임 캔버스 스타일 */
         canvas {
             display: block;
-            background: radial-gradient(circle at center, #1a1a40 0%, #000 100%);
+            background: radial-gradient(circle at center, #1a1a40 0%, #000 100%); /* 원형 그라데이션 배경 */
         }
 
+        /* 게임 정보 표시 (점수, 레벨, 체력) */
         .hud {
             position: absolute;
             top: 20px;
@@ -25,10 +28,11 @@
             color: #00ff88;
             font-size: 18px;
             font-weight: bold;
-            text-shadow: 0 0 10px #00ff88;
+            text-shadow: 0 0 10px #00ff88; /* 글로우 효과 */
             z-index: 10;
         }
 
+        /* 타이머 표시 */
         .timer {
             position: absolute;
             top: 20px;
@@ -36,20 +40,22 @@
             color: #ff4444;
             font-size: 24px;
             font-weight: bold;
-            text-shadow: 0 0 15px #ff4444;
+            text-shadow: 0 0 15px #ff4444; /* 글로우 효과 */
             z-index: 10;
         }
 
+        /* 게임 시작 화면 */
         .start-screen {
             position: absolute;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%); /* 중앙 정렬 */
             text-align: center;
             color: white;
             z-index: 100;
         }
 
+        /* 시작 버튼 스타일 */
         .start-button {
             padding: 15px 30px;
             font-size: 24px;
@@ -60,14 +66,16 @@
             cursor: pointer;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
             box-shadow: 0 4px 15px rgba(255, 68, 68, 0.4);
-            transition: all 0.3s ease;
+            transition: all 0.3s ease; /* 부드러운 전환 효과 */
         }
 
+        /* 버튼 호버 효과 */
         .start-button:hover {
-            transform: scale(1.05);
-            box-shadow: 0 8px 25px rgba(255, 68, 68, 0.6);
+            transform: scale(1.05); /* 약간 확대 */
+            box-shadow: 0 8px 25px rgba(255, 68, 68, 0.6); /* 그림자 강화 */
         }
 
+        /* 게임 제목 스타일 */
         .title {
             font-size: 48px;
             font-weight: bold;
@@ -75,9 +83,10 @@
             text-shadow: 0 0 20px #00ff88;
             background: linear-gradient(45deg, #00ff88, #44ff88);
             -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            -webkit-text-fill-color: transparent; /* 그라데이션 텍스트 */
         }
 
+        /* 게임 설명 텍스트 */
         .instructions {
             margin: 20px 0;
             font-size: 16px;
@@ -88,16 +97,20 @@
 </head>
 
 <body>
+    <!-- 게임이 그려질 캔버스 -->
     <canvas id="gameCanvas"></canvas>
 
+    <!-- 게임 상태 정보 표시 영역 -->
     <div class="hud">
         <div>점수: <span id="score">0</span></div>
         <div>레벨: <span id="level">1</span></div>
         <div>체력: <span id="health">💖💖💖</span></div>
     </div>
 
+    <!-- 남은 시간 표시 -->
     <div class="timer" id="timer">60</div>
 
+    <!-- 게임 시작 화면 -->
     <div class="start-screen" id="startScreen">
         <div class="title">구디90_김준희</div>
         <br>
@@ -111,26 +124,27 @@
     </div>
 
     <script>
+        // ===== 기본 설정 및 초기화 =====
         const canvas = document.getElementById("gameCanvas");
-        const ctx = canvas.getContext("2d");
+        const ctx = canvas.getContext("2d"); // 2D 렌더링 컨텍스트
 
-        // 캔버스 크기 설정
+        // 캔버스 크기를 브라우저 창 크기에 맞춤
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-        // 게임 상태
+        // ===== 게임 상태 관리 객체 =====
         let gameState = {
-            score: 0,
-            level: 1,
-            health: 3,
-            maxHealth: 3,
-            timeLeft: 60,
-            isPoweredUp: false,
-            powerUpTimer: 0,
-            backgroundOffset: 0
+            score: 0,           // 현재 점수
+            level: 1,           // 현재 레벨
+            health: 3,          // 현재 체력
+            maxHealth: 3,       // 최대 체력
+            timeLeft: 60,       // 남은 시간 (초)
+            isPoweredUp: false, // 파워업 상태 여부
+            powerUpTimer: 0,    // 파워업 남은 시간
+            backgroundOffset: 0 // 배경 스크롤 오프셋
         };
 
-        // UI 요소
+        // ===== HTML 요소 참조 =====
         const scoreElement = document.getElementById("score");
         const levelElement = document.getElementById("level");
         const healthElement = document.getElementById("health");
@@ -138,163 +152,194 @@
         const startScreen = document.getElementById("startScreen");
         const startButton = document.getElementById("startButton");
 
-        // 플레이어
+        // ===== 플레이어 객체 =====
         const player = {
-            x: canvas.width / 2,
-            y: canvas.height / 2,
-            size: 30,
-            color: "#00ff88",
-            speed: 6,
-            trail: []
+            x: canvas.width / 2,    // X 좌표 (화면 중앙)
+            y: canvas.height / 2,   // Y 좌표 (화면 중앙)
+            size: 30,               // 플레이어 크기
+            color: "#00ff88",       // 플레이어 색상 (초록)
+            speed: 6,               // 이동 속도
+            trail: []               // 이동 궤적 효과를 위한 배열
         };
 
-        // 게임 오브젝트 배열
-        const keys = {};
-        const enemies = [];
-        const bullets = [];
-        const particles = [];
-        const powerUps = [];
-        const stars = [];
+        // ===== 게임 오브젝트 배열들 =====
+        const keys = {};        // 현재 눌린 키들을 저장
+        const enemies = [];     // 적들을 저장하는 배열
+        const bullets = [];     // 총알들을 저장하는 배열
+        const particles = [];   // 파티클 효과들을 저장하는 배열
+        const powerUps = [];    // 파워업 아이템들을 저장하는 배열
+        const stars = [];       // 배경 별들을 저장하는 배열
 
-        // 별 배경 생성
+        // ===== 배경 별 생성 함수 =====
         function createStars() {
+            // 100개의 별을 랜덤 위치에 생성
             for (let i = 0; i < 100; i++) {
                 stars.push({
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height,
-                    size: Math.random() * 2 + 1,
-                    speed: Math.random() * 0.5 + 0.2
+                    x: Math.random() * canvas.width,    // 랜덤 X 좌표
+                    y: Math.random() * canvas.height,   // 랜덤 Y 좌표
+                    size: Math.random() * 2 + 1,        // 랜덤 크기 (1-3)
+                    speed: Math.random() * 0.5 + 0.2    // 랜덤 떨어지는 속도
                 });
             }
         }
 
-        // 키 입력 이벤트
+        // ===== 키보드 입력 처리 =====
+        // 키가 눌렸을 때
         window.addEventListener("keydown", (e) => {
-            keys[e.key] = true;
+            keys[e.key] = true; // 해당 키를 눌린 상태로 기록
+            
+            // 스페이스바 눌렀을 때 특수 스킬 발동
             if (e.key === " ") {
-                e.preventDefault();
+                e.preventDefault(); // 페이지 스크롤 방지
                 activateSpecialSkill();
             }
         });
 
+        // 키가 떼어졌을 때
         window.addEventListener("keyup", (e) => {
-            keys[e.key] = false;
+            keys[e.key] = false; // 해당 키를 떼어진 상태로 기록
         });
 
-        // 플레이어 이동
+        // ===== 플레이어 이동 함수 =====
         function movePlayer() {
-            let moved = false;
+            let moved = false; // 이동했는지 확인하는 플래그
+            
+            // 위쪽 화살표: 위로 이동 (화면 밖으로 나가지 않게 제한)
             if (keys["ArrowUp"] && player.y > 0) {
                 player.y -= player.speed;
                 moved = true;
             }
+            // 오른쪽 화살표: 오른쪽으로 이동
             if (keys["ArrowRight"] && player.x < canvas.width - player.size) {
                 player.x += player.speed;
                 moved = true;
             }
+            // 아래쪽 화살표: 아래로 이동
             if (keys["ArrowDown"] && player.y < canvas.height - player.size) {
                 player.y += player.speed;
                 moved = true;
             }
+            // 왼쪽 화살표: 왼쪽으로 이동
             if (keys["ArrowLeft"] && player.x > 0) {
                 player.x -= player.speed;
                 moved = true;
             }
 
-            // 플레이어 트레일 효과
+            // 플레이어가 이동했다면 궤적 효과 추가
             if (moved) {
                 player.trail.push({
-                    x: player.x + player.size / 2,
-                    y: player.y + player.size / 2,
-                    alpha: 1
+                    x: player.x + player.size / 2, // 플레이어 중심 X
+                    y: player.y + player.size / 2, // 플레이어 중심 Y
+                    alpha: 1 // 투명도 (1 = 완전 불투명)
                 });
+                // 궤적이 너무 길어지면 오래된 것 제거
                 if (player.trail.length > 10) player.trail.shift();
             }
 
-            // 트레일 페이드 아웃
+            // 모든 궤적 점들의 투명도를 점차 감소 (페이드 아웃 효과)
             player.trail.forEach(trail => trail.alpha -= 0.1);
         }
 
-        // 적 생성
+        // ===== 적 생성 함수 =====
         function spawnEnemy() {
+            // 세 가지 타입의 적 정의
             const enemyTypes = [
-                { color: "#ff4444", size: 20, speed: 1.5, health: 1, score: 10 }, // 일반
-                { color: "#4444ff", size: 15, speed: 3, health: 1, score: 20 },   // 빠름
-                { color: "#8844ff", size: 25, speed: 1, health: 3, score: 50 }    // 강함
+                { color: "#ff4444", size: 20, speed: 1.5, health: 1, score: 10 }, // 빨간 적: 일반
+                { color: "#4444ff", size: 15, speed: 3, health: 1, score: 20 },   // 파란 적: 빠름
+                { color: "#8844ff", size: 25, speed: 1, health: 3, score: 50 }    // 보라 적: 강함
             ];
 
+            // 랜덤하게 적 타입 선택
             const type = enemyTypes[Math.floor(Math.random() * enemyTypes.length)];
+            
+            // 8방향에서 적이 나타날 수 있는 방향들
             const directions = [
-                { x: 0, y: -1 }, { x: 1, y: -1 }, { x: 1, y: 0 }, { x: 1, y: 1 },
-                { x: 0, y: 1 }, { x: -1, y: 1 }, { x: -1, y: 0 }, { x: -1, y: -1 }
+                { x: 0, y: -1 },  // 위
+                { x: 1, y: -1 },  // 우상
+                { x: 1, y: 0 },   // 우
+                { x: 1, y: 1 },   // 우하
+                { x: 0, y: 1 },   // 하
+                { x: -1, y: 1 },  // 좌하
+                { x: -1, y: 0 },  // 좌
+                { x: -1, y: -1 }  // 좌상
             ];
 
+            // 랜덤 방향 선택
             const randomDirection = directions[Math.floor(Math.random() * directions.length)];
 
+            // 선택된 방향에 따라 화면 가장자리에서 적 생성
             const enemy = {
+                // X 좌표: 방향이 0이면 화면 내 랜덤, 양수면 오른쪽 끝, 음수면 왼쪽 끝
                 x: randomDirection.x === 0 ? Math.random() * canvas.width :
                     randomDirection.x > 0 ? canvas.width : 0,
+                // Y 좌표: 방향이 0이면 화면 내 랜덤, 양수면 아래쪽 끝, 음수면 위쪽 끝
                 y: randomDirection.y === 0 ? Math.random() * canvas.height :
                     randomDirection.y > 0 ? canvas.height : 0,
-                ...type,
-                maxHealth: type.health,
-                lastHit: 0
+                ...type,                    // 적 타입의 모든 속성 복사
+                maxHealth: type.health,     // 최대 체력 저장
+                lastHit: 0                  // 마지막으로 맞은 시간 (피격 효과용)
             };
 
-            enemies.push(enemy);
+            enemies.push(enemy); // 적 배열에 추가
         }
 
-        // 적 이동
+        // ===== 적 이동 함수 =====
         function moveEnemies() {
             enemies.forEach((enemy, index) => {
+                // 플레이어와 적 사이의 거리 계산
                 const dx = player.x - enemy.x;
                 const dy = player.y - enemy.y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
 
+                // 플레이어 방향으로 이동 (정규화된 방향 벡터 * 속도)
                 enemy.x += (dx / distance) * enemy.speed;
                 enemy.y += (dy / distance) * enemy.speed;
 
                 // 플레이어와 충돌 체크
                 if (distance < (player.size + enemy.size) / 2) {
-                    takeDamage();
-                    createExplosion(enemy.x, enemy.y, "#ff4444");
-                    enemies.splice(index, 1);
+                    takeDamage();                                    // 플레이어 데미지
+                    createExplosion(enemy.x, enemy.y, "#ff4444");   // 폭발 효과
+                    enemies.splice(index, 1);                       // 적 제거
                 }
             });
         }
 
-        // 총알 생성
+        // ===== 총알 생성 함수 =====
         function spawnBullets() {
+            // 8방향 벡터 정의
             const directions = [
-                { x: 0, y: -1 }, { x: 1, y: -1 }, { x: 1, y: 0 }, { x: 1, y: 1 },
-                { x: 0, y: 1 }, { x: -1, y: 1 }, { x: -1, y: 0 }, { x: -1, y: -1 }
+                { x: 0, y: -1 },  { x: 1, y: -1 },  { x: 1, y: 0 },   { x: 1, y: 1 },
+                { x: 0, y: 1 },   { x: -1, y: 1 },  { x: -1, y: 0 },  { x: -1, y: -1 }
             ];
 
-            const bulletCount = gameState.isPoweredUp ? directions.length : 4;
+            // 파워업 상태에 따라 발사할 방향 결정
             const useDirections = gameState.isPoweredUp ? directions :
-                [{ x: 0, y: -1 }, { x: 1, y: 0 }, { x: 0, y: 1 }, { x: -1, y: 0 }];
+                [{ x: 0, y: -1 }, { x: 1, y: 0 }, { x: 0, y: 1 }, { x: -1, y: 0 }]; // 4방향
 
+            // 각 방향으로 총알 생성
             useDirections.forEach((direction) => {
                 const bullet = {
-                    x: player.x + player.size / 2,
+                    x: player.x + player.size / 2,                    // 플레이어 중심에서 시작
                     y: player.y + player.size / 2,
-                    size: gameState.isPoweredUp ? 8 : 5,
-                    color: gameState.isPoweredUp ? "#ffff44" : "#00ff88",
-                    speed: 8,
-                    dx: direction.x,
-                    dy: direction.y,
-                    damage: gameState.isPoweredUp ? 2 : 1
+                    size: gameState.isPoweredUp ? 8 : 5,              // 파워업 시 크기 증가
+                    color: gameState.isPoweredUp ? "#ffff44" : "#00ff88", // 파워업 시 색상 변경
+                    speed: 8,                                         // 총알 속도
+                    dx: direction.x,                                  // X 방향
+                    dy: direction.y,                                  // Y 방향
+                    damage: gameState.isPoweredUp ? 2 : 1             // 파워업 시 데미지 증가
                 };
                 bullets.push(bullet);
             });
         }
 
-        // 총알 이동
+        // ===== 총알 이동 함수 =====
         function moveBullets() {
             bullets.forEach((bullet, index) => {
+                // 총알을 설정된 방향과 속도로 이동
                 bullet.x += bullet.dx * bullet.speed;
                 bullet.y += bullet.dy * bullet.speed;
 
+                // 화면 밖으로 나간 총알 제거
                 if (bullet.x < 0 || bullet.x > canvas.width ||
                     bullet.y < 0 || bullet.y > canvas.height) {
                     bullets.splice(index, 1);
@@ -302,27 +347,31 @@
             });
         }
 
-        // 총알과 적 충돌 체크
+        // ===== 총알과 적 충돌 검사 =====
         function checkBulletCollision() {
             bullets.forEach((bullet, bulletIndex) => {
                 enemies.forEach((enemy, enemyIndex) => {
+                    // 총알과 적 사이의 거리 계산
                     const dx = bullet.x - (enemy.x + enemy.size / 2);
                     const dy = bullet.y - (enemy.y + enemy.size / 2);
                     const distance = Math.sqrt(dx * dx + dy * dy);
 
+                    // 충돌 검사 (거리가 반지름의 합보다 작으면 충돌)
                     if (distance < (bullet.size + enemy.size) / 2) {
-                        enemy.health -= bullet.damage;
-                        enemy.lastHit = Date.now();
-                        bullets.splice(bulletIndex, 1);
+                        enemy.health -= bullet.damage;              // 적 체력 감소
+                        enemy.lastHit = Date.now();                 // 피격 시간 기록
+                        bullets.splice(bulletIndex, 1);             // 총알 제거
 
+                        // 피격 파티클 효과 생성
                         createParticles(enemy.x + enemy.size / 2, enemy.y + enemy.size / 2, enemy.color);
 
+                        // 적이 죽었다면
                         if (enemy.health <= 0) {
-                            gameState.score += enemy.score;
-                            createExplosion(enemy.x, enemy.y, enemy.color);
-                            enemies.splice(enemyIndex, 1);
+                            gameState.score += enemy.score;          // 점수 증가
+                            createExplosion(enemy.x, enemy.y, enemy.color); // 폭발 효과
+                            enemies.splice(enemyIndex, 1);           // 적 제거
 
-                            // 파워업 드롭 확률
+                            // 10% 확률로 파워업 드롭
                             if (Math.random() < 0.1) {
                                 spawnPowerUp(enemy.x, enemy.y);
                             }
@@ -332,127 +381,151 @@
             });
         }
 
-        // 파워업 생성
+        // ===== 파워업 생성 함수 =====
         function spawnPowerUp(x, y) {
+            // 세 가지 타입의 파워업 정의
             const types = [
-                { type: "score", color: "#ffff44", symbol: "💎", effect: () => gameState.score += 100 },
-                { type: "power", color: "#ff8844", symbol: "⚡", effect: () => activatePowerUp() },
-                { type: "health", color: "#44ff44", symbol: "💖", effect: () => restoreHealth() }
+                { 
+                    type: "score", 
+                    color: "#ffff44", 
+                    symbol: "💎", 
+                    effect: () => gameState.score += 100 
+                },
+                { 
+                    type: "power", 
+                    color: "#ff8844", 
+                    symbol: "⚡", 
+                    effect: () => activatePowerUp() 
+                },
+                { 
+                    type: "health", 
+                    color: "#44ff44", 
+                    symbol: "💖", 
+                    effect: () => restoreHealth() 
+                }
             ];
 
+            // 랜덤하게 파워업 타입 선택하여 생성
             const powerUp = {
-                x, y, size: 20,
+                x, y, 
+                size: 20,
                 ...types[Math.floor(Math.random() * types.length)],
-                pulse: 0
+                pulse: 0 // 펄스 애니메이션용
             };
 
             powerUps.push(powerUp);
         }
 
-        // 파워업 이동 및 충돌
+        // ===== 파워업 업데이트 및 충돌 검사 =====
         function updatePowerUps() {
             powerUps.forEach((powerUp, index) => {
-                powerUp.pulse += 0.1;
+                powerUp.pulse += 0.1; // 펄스 애니메이션 업데이트
 
+                // 플레이어와 파워업 사이의 거리 계산
                 const dx = powerUp.x - (player.x + player.size / 2);
                 const dy = powerUp.y - (player.y + player.size / 2);
                 const distance = Math.sqrt(dx * dx + dy * dy);
 
+                // 플레이어가 파워업을 획득했는지 확인
                 if (distance < (powerUp.size + player.size) / 2) {
-                    powerUp.effect();
-                    createParticles(powerUp.x, powerUp.y, powerUp.color);
-                    powerUps.splice(index, 1);
+                    powerUp.effect();                                // 파워업 효과 실행
+                    createParticles(powerUp.x, powerUp.y, powerUp.color); // 획득 효과
+                    powerUps.splice(index, 1);                       // 파워업 제거
                 }
             });
         }
 
-        // 파워업 활성화
+        // ===== 파워업 활성화 =====
         function activatePowerUp() {
             gameState.isPoweredUp = true;
-            gameState.powerUpTimer = 300; // 5초
+            gameState.powerUpTimer = 300; // 5초 (60fps 기준)
         }
 
-        // 체력 회복
+        // ===== 체력 회복 =====
         function restoreHealth() {
             if (gameState.health < gameState.maxHealth) {
                 gameState.health++;
             }
         }
 
-        // 스페셜 스킬 (원형 공격)
+        // ===== 특수 스킬 (원형 공격) =====
         function activateSpecialSkill() {
+            // 16방향으로 총알 발사 (원형)
             for (let i = 0; i < 16; i++) {
-                const angle = (i / 16) * Math.PI * 2;
+                const angle = (i / 16) * Math.PI * 2; // 각도 계산
                 const bullet = {
                     x: player.x + player.size / 2,
                     y: player.y + player.size / 2,
                     size: 8,
-                    color: "#ff44ff",
+                    color: "#ff44ff",        // 특수 스킬 색상
                     speed: 10,
-                    dx: Math.cos(angle),
-                    dy: Math.sin(angle),
-                    damage: 3
+                    dx: Math.cos(angle),     // X 방향 (코사인)
+                    dy: Math.sin(angle),     // Y 방향 (사인)
+                    damage: 3                // 높은 데미지
                 };
                 bullets.push(bullet);
             }
+            // 스킬 사용 시 폭발 효과
             createExplosion(player.x, player.y, "#ff44ff");
         }
 
-        // 데미지 받기
+        // ===== 데미지 받기 =====
         function takeDamage() {
             gameState.health--;
             if (gameState.health <= 0) {
-                endGame(false);
+                endGame(false); // 게임 패배로 종료
             }
         }
 
-        // 파티클 생성
+        // ===== 파티클 생성 (작은 효과) =====
         function createParticles(x, y, color) {
             for (let i = 0; i < 5; i++) {
                 particles.push({
                     x, y,
-                    vx: (Math.random() - 0.5) * 4,
-                    vy: (Math.random() - 0.5) * 4,
-                    life: 30,
+                    vx: (Math.random() - 0.5) * 4,    // 랜덤 X 속도
+                    vy: (Math.random() - 0.5) * 4,    // 랜덤 Y 속도
+                    life: 30,                         // 생존 시간
                     color,
-                    size: Math.random() * 3 + 1
+                    size: Math.random() * 3 + 1       // 랜덤 크기
                 });
             }
         }
 
-        // 폭발 효과
+        // ===== 폭발 효과 생성 (큰 효과) =====
         function createExplosion(x, y, color) {
             for (let i = 0; i < 15; i++) {
                 particles.push({
                     x, y,
-                    vx: (Math.random() - 0.5) * 8,
+                    vx: (Math.random() - 0.5) * 8,    // 더 큰 속도
                     vy: (Math.random() - 0.5) * 8,
-                    life: 60,
+                    life: 60,                         // 더 긴 생존 시간
                     color,
-                    size: Math.random() * 5 + 2
+                    size: Math.random() * 5 + 2       // 더 큰 크기
                 });
             }
         }
 
-        // 파티클 업데이트
+        // ===== 파티클 업데이트 =====
         function updateParticles() {
             particles.forEach((particle, index) => {
-                particle.x += particle.vx;
-                particle.y += particle.vy;
-                particle.life--;
-                particle.size *= 0.98;
+                particle.x += particle.vx;      // X 위치 업데이트
+                particle.y += particle.vy;      // Y 위치 업데이트
+                particle.life--;                // 생존 시간 감소
+                particle.size *= 0.98;          // 크기 점차 감소
 
+                // 생존 시간이 끝났거나 너무 작아지면 제거
                 if (particle.life <= 0 || particle.size < 0.1) {
                     particles.splice(index, 1);
                 }
             });
         }
 
-        // 별 배경 업데이트
+        // ===== 별 배경 업데이트 =====
         function updateStars() {
-            gameState.backgroundOffset += 0.5;
+            gameState.backgroundOffset += 0.5; // 배경 스크롤 효과
             stars.forEach(star => {
-                star.y += star.speed;
+                star.y += star.speed;           // 별이 아래로 떨어짐
+                // 화면 아래로 나간 별은 위쪽에서 다시 시작
                 if (star.y > canvas.height) {
                     star.y = 0;
                     star.x = Math.random() * canvas.width;
@@ -460,29 +533,31 @@
             });
         }
 
-        // 레벨 업데이트
+        // ===== 레벨 업데이트 =====
         function updateLevel() {
-            const newLevel = Math.floor(gameState.score / 500) + 1;
+            const newLevel = Math.floor(gameState.score / 500) + 1; // 500점마다 레벨업
             if (newLevel > gameState.level) {
                 gameState.level = newLevel;
-                // 레벨업 효과
+                // 레벨업 시 폭발 효과
                 createExplosion(player.x, player.y, "#00ff88");
             }
         }
 
-        // 렌더링 함수들
+        // ===== 렌더링 함수들 =====
+        
+        // 플레이어 그리기
         function drawPlayer() {
-            // 트레일 그리기
+            // 플레이어 궤적 그리기
             player.trail.forEach((trail, index) => {
                 if (trail.alpha > 0) {
-                    ctx.globalAlpha = trail.alpha;
+                    ctx.globalAlpha = trail.alpha;  // 투명도 적용
                     ctx.fillStyle = player.color;
                     ctx.fillRect(trail.x - 2, trail.y - 2, 4, 4);
                 }
             });
-            ctx.globalAlpha = 1;
+            ctx.globalAlpha = 1; // 투명도 초기화
 
-            // 플레이어 그리기 (그라데이션 효과)
+            // 플레이어 그라데이션 효과
             const gradient = ctx.createRadialGradient(
                 player.x + player.size / 2, player.y + player.size / 2, 0,
                 player.x + player.size / 2, player.y + player.size / 2, player.size / 2
@@ -500,167 +575,30 @@
                 ctx.strokeStyle = "#ffff44";
                 ctx.lineWidth = 2;
                 ctx.strokeRect(player.x - 2, player.y - 2, player.size + 4, player.size + 4);
-                ctx.shadowBlur = 0;
+                ctx.shadowBlur = 0; // 그림자 효과 제거
             }
         }
 
+        // 적들 그리기
         function drawEnemies() {
             enemies.forEach(enemy => {
-                // 피격 시 흰색 깜빡임
+                // 피격 시 흰색 깜빡임 효과
                 const isHit = Date.now() - enemy.lastHit < 100;
                 ctx.fillStyle = isHit ? "#ffffff" : enemy.color;
                 ctx.fillRect(enemy.x, enemy.y, enemy.size, enemy.size);
 
-                // 체력바
+                // 체력이 1보다 큰 적의 체력바 표시
                 if (enemy.maxHealth > 1) {
                     const barWidth = enemy.size;
                     const barHeight = 4;
                     const healthPercent = enemy.health / enemy.maxHealth;
 
+                    // 체력바 배경 (검은색)
                     ctx.fillStyle = "#333";
                     ctx.fillRect(enemy.x, enemy.y - 8, barWidth, barHeight);
+                    // 체력바 (빨간색)
                     ctx.fillStyle = "#ff4444";
                     ctx.fillRect(enemy.x, enemy.y - 8, barWidth * healthPercent, barHeight);
                 }
             });
         }
-
-        function drawBullets() {
-            bullets.forEach(bullet => {
-                ctx.fillStyle = bullet.color;
-                ctx.fillRect(bullet.x - bullet.size / 2, bullet.y - bullet.size / 2, bullet.size, bullet.size);
-
-                // 총알 트레일 효과
-                ctx.globalAlpha = 0.5;
-                ctx.fillRect(bullet.x - bullet.dx - bullet.size / 2, bullet.y - bullet.dy - bullet.size / 2, bullet.size, bullet.size);
-                ctx.globalAlpha = 1;
-            });
-        }
-
-        function drawPowerUps() {
-            powerUps.forEach(powerUp => {
-                const size = powerUp.size + Math.sin(powerUp.pulse) * 3;
-                ctx.font = `${size}px Arial`;
-                ctx.textAlign = "center";
-                ctx.fillText(powerUp.symbol, powerUp.x, powerUp.y);
-            });
-        }
-
-        function drawParticles() {
-            particles.forEach(particle => {
-                ctx.globalAlpha = particle.life / 60;
-                ctx.fillStyle = particle.color;
-                ctx.fillRect(particle.x - particle.size / 2, particle.y - particle.size / 2, particle.size, particle.size);
-            });
-            ctx.globalAlpha = 1;
-        }
-
-        function drawStars() {
-            ctx.fillStyle = "#ffffff";
-            stars.forEach(star => {
-                ctx.globalAlpha = 0.7;
-                ctx.fillRect(star.x, star.y, star.size, star.size);
-            });
-            ctx.globalAlpha = 1;
-        }
-
-        // UI 업데이트
-        function updateUI() {
-            scoreElement.textContent = gameState.score;
-            levelElement.textContent = gameState.level;
-            healthElement.textContent = "💖".repeat(gameState.health) + "🤍".repeat(gameState.maxHealth - gameState.health);
-            timerElement.textContent = gameState.timeLeft;
-
-            // 타이머 색상 변경
-            if (gameState.timeLeft <= 10) {
-                timerElement.style.color = "#ff4444";
-                timerElement.style.animation = "blink 1s infinite";
-            } else {
-                timerElement.style.color = "#ffff44";
-                timerElement.style.animation = "none";
-            }
-        }
-
-        // 타이머 시작
-        function startTimer() {
-            const timerInterval = setInterval(() => {
-                gameState.timeLeft--;
-                if (gameState.timeLeft <= 0) {
-                    clearInterval(timerInterval);
-                    endGame(true);
-                }
-            }, 1000);
-        }
-
-        // 게임 종료
-        function endGame(victory) {
-            const message = victory ?
-                `🎉 승리! 최종 점수: ${gameState.score}` :
-                `💀 패배! 최종 점수: ${gameState.score}`;
-            alert(message);
-            location.reload();
-        }
-
-        // 메인 게임 루프
-        function gameLoop() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // 업데이트
-            updateStars();
-            movePlayer();
-            moveEnemies();
-            moveBullets();
-            checkBulletCollision();
-            updatePowerUps();
-            updateParticles();
-            updateLevel();
-            updateUI();
-
-            // 파워업 타이머
-            if (gameState.isPoweredUp) {
-                gameState.powerUpTimer--;
-                if (gameState.powerUpTimer <= 0) {
-                    gameState.isPoweredUp = false;
-                }
-            }
-
-            // 렌더링
-            drawStars();
-            drawPlayer();
-            drawEnemies();
-            drawBullets();
-            drawPowerUps();
-            drawParticles();
-
-            requestAnimationFrame(gameLoop);
-        }
-
-        // 게임 시작
-        startButton.addEventListener("click", () => {
-            startScreen.style.display = "none";
-            createStars();
-            gameLoop();
-            startTimer();
-
-            // 적 생성 간격을 레벨에 따라 조정
-            setInterval(() => {
-                const spawnRate = Math.max(100, 200 - gameState.level * 10);
-                if (Math.random() < 0.7) spawnEnemy();
-            }, 150);
-
-            setInterval(spawnBullets, 300);
-        });
-
-        // CSS 애니메이션 추가
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes blink {
-                0%, 50% { opacity: 1; }
-                51%, 100% { opacity: 0.3; }
-            }
-        `;
-        document.head.appendChild(style);
-    </script>
-</body>
-
-</html>
